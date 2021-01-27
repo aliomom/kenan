@@ -1,0 +1,86 @@
+
+name: Build and Deploy to GKE
+
+#on:
+  push:
+    branches: [ dev ]
+env:
+  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
+  GKE_CLUSTER: test    # TODO: update to cluster name
+  GKE_ZONE: us-central1-c   # TODO: update to cluster zone
+  DEPLOYMENT_NAME: turkish-app-test
+  IMAGE: static-site
+  ORGANIZATION: yes-soft-de
+  ENVREPO: environment-tools
+  
+
+jobs:
+  setup-build-publish-deploy:
+    name: Setup, Build, Publish, and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      
+    - uses: actions/checkout@v2
+      with:
+         repository: yes-soft-de/environment-tools
+         token: ${{ secrets.GHSECRETTOKEN }}
+    - run: |
+        mkdir $DEPLOYMENT_NAME
+        mkdir $DEPLOYMENT_NAME/jwt && cd $DEPLOYMENT_NAME/jwt
+        ssh-keygen -t rsa -b 4096
+        
+        
+            
+        git commit -a "add project $DEPLOYMENT_NAME"
+        git push 
+    - uses: google-github-actions/setup-gcloud@master
+      with:
+        version: '290.0.1'
+        service_account_key: ${{ secrets.GKE_SA_KEY }}
+        service_account_email: ${{ secrets.service_account_email }}
+        project_id: ${{ secrets.GKE_PROJECT }}
+        export_default_credentials: true
+
+    - run: |-
+        gcloud --quiet auth configure-docker
+
+        #echo ${{ secrets.GHSECRETTOKEN }} > token
+        #export GITHUB_TOKEN=${{ secrets.GHSECRETTOKEN }}
+     
+        cd $DEPLOYMENT_NAME
+        ext=sec
+        
+        imagepath=gcr.io/${{ secrets.GKE_PROJECT }}/"$DEPLOYMENT_NAME""$ext"
+        echo $imagepath
+        ls -al 
+        mv Dockerfile dockerfile
+        file dockerfile
+        cat dockerfile
+        gcloud builds submit --tag="$imagepath"
+   
+    - run: |-
+        gcloud container clusters get-credentials "$GKE_CLUSTER" --zone "$GKE_ZONE"
+
+    # Build the Docker image
+    - name: Checkout for $DEPLOYMENT_NAME repo 
+      uses: actions/checkout@v2
+  
+    - run: |-
+       ls -al
+       cd backend
+       ls -al 
+       ext="$DEPLOYMENT_NAME""sec"
+       imagepath=gcr.io/${{ secrets.GKE_PROJECT }}/"$ext"
+       echo $imagepath
+       sed -Ei "s|fireplacehere|$imagepath|p" Dockerfile
+       gcloud builds submit --tag=gcr.io/${{ secrets.GKE_PROJECT }}/$DEPLOYMENT_NAME
+       cd k8s
+       kubectl apply -f namespace.yaml
+       kubectl apply -f server.yaml
+       kubectl apply -f mysql.yaml
+       kubectl get services -o wide -n $DEPLOYMENT_NAME
+
+

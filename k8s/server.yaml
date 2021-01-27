@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: FORREPLACE1235-webserver
+  namespace: FORREPLACE1235
+  labels:
+    app: apache
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apache
+  template:
+    metadata:
+      labels:
+        app: apache
+    spec:
+      containers:
+      - name: php-apache
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: FORREPLACE1235-secret
+              key: rootpassword
+        image: gcr.io/PROJECT123/FORREPLACE1235
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: FORREPLACE1235-pvc-sym-m
+          mountPath: /var/www/upload/image
+      volumes:
+      - name: FORREPLACE1235-pvc-sym-m
+        persistentVolumeClaim:
+          claimName: FORREPLACE1235-pvc-sym-uploud
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: FORREPLACE1235-web-service
+  namespace: FORREPLACE1235
+  labels:
+    run: FORREPLACE1235-web-service
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    protocol: TCP
+  selector:
+    app: apache
+---
+apiVersion: v1                  
+kind: PersistentVolumeClaim     
+metadata:                       
+   name: FORREPLACE1235-pvc-sym-uploud
+   namespace: FORREPLACE1235
+spec:                           
+   accessModes:                  
+   - ReadWriteOnce              
+   resources:                   
+      requests:                 
+         storage: 1Gi   
