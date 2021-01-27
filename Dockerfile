@@ -14,13 +14,13 @@ RUN apt-get update && apt-get install -y build-essential libssl-dev zlib1g-dev l
 COPY 000-default.conf /etc/apache2/sites-available/000-default.conf
 COPY --chown=www-data:www-data . /var/www/html
 RUN a2enmod rewrite
-#@1COPY --from=gcr.io/PROJECT_ID123/SECRETNAME123 ./.env /var/www/html
+COPY --from=gcr.io/pc-api-6479467557629758909-343/kenansec ./.env /var/www/html
 RUN apt update -y && apt install zip -y && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 RUN composer update symfony/flex --no-plugins --no-scripts
 
 #@2RUN composer dump-env prod
-#@1COPY --from=gcr.io/PROJECT_ID123/SECRETNAME123 ./.htaccess /var/www/html/public
-COPY --from=gcr.io/PROJECT_ID123/SECRETNAME123 ./jwt/ /var/www/html/config/jwt
+COPY --from=gcr.io/pc-api-6479467557629758909-343/kenansec ./.htaccess /var/www/html/public
+COPY --from=gcr.io/pc-api-6479467557629758909-343/kenansec ./jwt/ /var/www/html/config/jwt
 RUN chown -R www-data:www-data /var && chmod -R g+rw /var
 COPY --from=vendor /tmp/vendor/ /var/www/html/vendor/
 RUN docker-php-ext-install mysqli pdo pdo_mysql

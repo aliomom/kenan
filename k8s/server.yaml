@@ -1,8 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: FORREPLACE1235-webserver
-  namespace: FORREPLACE1235
+  name: kenan-webserver
+  namespace: kenan
   labels:
     app: apache
 spec:
@@ -21,26 +21,26 @@ spec:
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: FORREPLACE1235-secret
+              name: kenan-secret
               key: rootpassword
-        image: gcr.io/PROJECT123/FORREPLACE1235
+        image: gcr.io//kenan
         ports:
         - containerPort: 80
         volumeMounts:
-        - name: FORREPLACE1235-pvc-sym-m
+        - name: kenan-pvc-sym-m
           mountPath: /var/www/upload/image
       volumes:
-      - name: FORREPLACE1235-pvc-sym-m
+      - name: kenan-pvc-sym-m
         persistentVolumeClaim:
-          claimName: FORREPLACE1235-pvc-sym-uploud
+          claimName: kenan-pvc-sym-uploud
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: FORREPLACE1235-web-service
-  namespace: FORREPLACE1235
+  name: kenan-web-service
+  namespace: kenan
   labels:
-    run: FORREPLACE1235-web-service
+    run: kenan-web-service
 spec:
   type: LoadBalancer
   ports:
@@ -52,8 +52,8 @@ spec:
 apiVersion: v1                  
 kind: PersistentVolumeClaim     
 metadata:                       
-   name: FORREPLACE1235-pvc-sym-uploud
-   namespace: FORREPLACE1235
+   name: kenan-pvc-sym-uploud
+   namespace: kenan
 spec:                           
    accessModes:                  
    - ReadWriteOnce              
